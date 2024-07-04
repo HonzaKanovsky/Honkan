@@ -1,6 +1,6 @@
 package com.honka.cryptoTracker.dto
 
 class UserDto (
-    val username: String,
-    val password: String
+    val userID: Long?,
+    val username: String
 )

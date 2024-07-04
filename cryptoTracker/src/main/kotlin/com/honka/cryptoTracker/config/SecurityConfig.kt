@@ -25,7 +25,7 @@ class SecurityConfig {
             .csrf { csrf -> csrf.disable() }
             .authorizeHttpRequests { authorize ->
                 authorize
-                    .requestMatchers("/api/users/register").permitAll()
+                    .requestMatchers("/api/user/register").permitAll()
                     .anyRequest().permitAll()
             }
         return http.build()

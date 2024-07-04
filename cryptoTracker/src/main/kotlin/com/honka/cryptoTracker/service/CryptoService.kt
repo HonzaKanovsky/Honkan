@@ -22,7 +22,7 @@ class CryptoService(private val cryptoRepository: CryptoRepository) {
         val apiKey = System.getenv("CMC_API_KEY") ?: throw IllegalStateException("API key not found")
 
         // URL to fetch 1000 currencies
-        val url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=1000&convert=USD"
+        val url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5000&convert=USD"
 
         // Set up logging interceptor (optional)
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
@@ -53,7 +53,7 @@ class CryptoService(private val cryptoRepository: CryptoRepository) {
                 val id = currency.getLong("id")
                 val name = currency.getString("name")
                 val symbol = currency.getString("symbol")
-                val price = currency.getJSONObject("quote").getJSONObject("USD").getDouble("price")
+                val price = currency.getJSONObject("quote").getJSONObject("USD").getBigDecimal("price")
 
                 val crypto = Crypto(id=id,name=name,symbol=symbol,price=price, dateUpdated = Instant.now())
                 cryptoRepository.save(crypto)

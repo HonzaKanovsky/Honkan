@@ -1,43 +1,52 @@
 package com.honka.cryptoTracker.service
 
 import com.honka.cryptoTracker.dto.UserDto
+import com.honka.cryptoTracker.dto.UserRequestDto
 import com.honka.cryptoTracker.model.User
+import com.honka.cryptoTracker.model.UserHistory
+import com.honka.cryptoTracker.repository.UserHistoryRepository
 import com.honka.cryptoTracker.repository.UserRepository
-import io.netty.util.internal.StringUtil
 import org.springframework.security.crypto.password.PasswordEncoder
 
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.Instant
 
 @Service
 class UserService(private val userRepository: UserRepository,
-                  private val passwordEncoder: PasswordEncoder) {
-    fun registerUser(user: UserDto): String {
-        val result = "User: " + user.username + " is registered successfully."
+                  private val passwordEncoder: PasswordEncoder,
+                  private val userHistoryRepository: UserHistoryRepository) {
+    fun registerUser(user: UserRequestDto): UserDto {
         if(isUserValid(user)){
             val databaseUser = userRepository.findByUsername(user.username).orElse(null)
             if(databaseUser == null){
                 val newUser = User(username = user.username,
                                 hashedPassword = passwordEncoder.encode(user.password))
+
+                val userHistory = UserHistory(user =newUser, portfolioValue = BigDecimal.ZERO, date = Instant.now())
                 userRepository.save(newUser)
-                return result
+                userHistoryRepository.save(userHistory)
+                val userID =  userRepository.findByUsername(user.username).orElse(null).id
+                return UserDto(userID,user.username)
             }
-            return "Name is taken."
         }
-        return "Name or password doesn't meet criteria."
+        return UserDto(null,user.username)
+
     }
-    fun loginUser(user: UserDto): String {
+    fun loginUser(user: UserRequestDto): UserDto {
         if(validateUser(user)){
-            return "user Logged in"
+            val userID =  userRepository.findByUsername(user.username).orElse(null).id
+            return UserDto(userID,user.username)
         }
-        return "user not logged in"
+        return UserDto(null,user.username)
     }
     
-    private fun validateUser(user: UserDto): Boolean {
+    private fun validateUser(user: UserRequestDto): Boolean {
         val databaseUser = userRepository.findByUsername(user.username).orElse(null) ?: return false
         return passwordEncoder.matches(user.password, databaseUser.hashedPassword)
     }
 
-    private fun isUserValid(user: UserDto): Boolean {
+    private fun isUserValid(user: UserRequestDto): Boolean {
         if (!user.equals(null) && user.username.isNotEmpty() && user.password.isNotEmpty()) {
             return isUserNameCorrect(user.username) && isPasswordCorrect(user.password)
         }
