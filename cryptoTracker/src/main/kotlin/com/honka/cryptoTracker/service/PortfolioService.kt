@@ -47,22 +47,29 @@ class PortfolioService(val userRepository: UserRepository,
         for (position in positions){
             portfolioValue += ((position.crypto?.price ?: BigDecimal.ZERO) * position.amount)
         }
-        val userHistory = UserHistory(user=user, portfolioValue = portfolioValue, date = Instant.now())
+        val userHistory = UserHistory(user=user, portfolioValue = portfolioValue, historizationDate = Instant.now())
         userHistoryRepository.save(userHistory)
     }
 
-    fun getPositionsForUser(portfolioRequestDto: PortfolioRequestDto): PortfolioDto {
-        var latestPortfolioValue : BigDecimal = BigDecimal.ZERO
-        latestPortfolioValue =
-            userHistoryRepository.getFirstByUserIdOrderByDateDesc(portfolioRequestDto.userID)?.portfolioValue ?: 0.toBigDecimal()
-        val positions = positionRepository.getAllByUserId(portfolioRequestDto.userID)
+    fun getPortfolioForUser(portfolioRequestDto: PortfolioRequestDto): PortfolioDto {
+        return PortfolioDto(
+            getPortfolioValueByUserID(portfolioRequestDto.userID),
+            getPositionsByUserID(portfolioRequestDto.userID)
+        )
+    }
 
-        val resultList : ArrayList<PositionDto> = ArrayList()
+    fun getPortfolioValueByUserID(userID: Long) : BigDecimal{
+        return userHistoryRepository.getFirstByUserIdOrderByHistorizationDateDesc(userID)?.portfolioValue ?: 0.toBigDecimal()
+    }
+    fun getPositionsByUserID(userID: Long) : ArrayList<PositionDto>{
+        val positions = positionRepository.getAllByUserId(userID)
+
+        val result : ArrayList<PositionDto> = ArrayList()
 
         for (position in positions){
-            resultList.add(position.toDto())
+            result.add(position.toDto())
         }
 
-        return PortfolioDto(latestPortfolioValue, resultList)
+        return result
     }
 }

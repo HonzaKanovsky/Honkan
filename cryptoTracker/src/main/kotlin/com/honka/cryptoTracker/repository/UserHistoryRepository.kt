@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface UserHistoryRepository : JpaRepository<UserHistory, Long> {
-    fun getFirstByUserIdOrderByDateDesc(id: Long) : UserHistory?
+    fun getFirstByUserIdOrderByHistorizationDateDesc(id: Long) : UserHistory?
 }

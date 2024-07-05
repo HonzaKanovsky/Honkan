@@ -1,5 +1,6 @@
 package com.honka.cryptoTracker.service
 
+import com.honka.cryptoTracker.dto.PortfolioDto
 import com.honka.cryptoTracker.dto.UserDto
 import com.honka.cryptoTracker.dto.UserRequestDto
 import com.honka.cryptoTracker.model.User
@@ -15,30 +16,34 @@ import java.time.Instant
 @Service
 class UserService(private val userRepository: UserRepository,
                   private val passwordEncoder: PasswordEncoder,
-                  private val userHistoryRepository: UserHistoryRepository) {
-    fun registerUser(user: UserRequestDto): UserDto {
+                  private val userHistoryRepository: UserHistoryRepository,
+                  private val portfolioService: PortfolioService) {
+    fun registerUser(user: UserRequestDto): UserDto? {
         if(isUserValid(user)){
             val databaseUser = userRepository.findByUsername(user.username).orElse(null)
             if(databaseUser == null){
                 val newUser = User(username = user.username,
                                 hashedPassword = passwordEncoder.encode(user.password))
 
-                val userHistory = UserHistory(user =newUser, portfolioValue = BigDecimal.ZERO, date = Instant.now())
+                val userHistory = UserHistory(user =newUser, portfolioValue = BigDecimal.ZERO, historizationDate = Instant.now())
                 userRepository.save(newUser)
                 userHistoryRepository.save(userHistory)
-                val userID =  userRepository.findByUsername(user.username).orElse(null).id
-                return UserDto(userID,user.username)
+                return newUser.toDto()
             }
         }
-        return UserDto(null,user.username)
+        return null
 
     }
-    fun loginUser(user: UserRequestDto): UserDto {
-        if(validateUser(user)){
-            val userID =  userRepository.findByUsername(user.username).orElse(null).id
-            return UserDto(userID,user.username)
+    fun loginUser(user: UserRequestDto): UserDto? {
+        if(validateUser(user)) {
+            val databaseUser = userRepository.findByUsername(user.username).orElse(null)
+            if(databaseUser != null){
+                val result = databaseUser.toDto()
+                result.portfolio = PortfolioDto(portfolioService.getPortfolioValueByUserID(databaseUser.id!!),portfolioService.getPositionsByUserID(databaseUser.id))
+                return result
+            }
         }
-        return UserDto(null,user.username)
+        return null
     }
     
     private fun validateUser(user: UserRequestDto): Boolean {
@@ -50,7 +55,7 @@ class UserService(private val userRepository: UserRepository,
         if (!user.equals(null) && user.username.isNotEmpty() && user.password.isNotEmpty()) {
             return isUserNameCorrect(user.username) && isPasswordCorrect(user.password)
         }
-        return false;
+        return false
     }
 
     private fun isPasswordCorrect(password: String): Boolean {

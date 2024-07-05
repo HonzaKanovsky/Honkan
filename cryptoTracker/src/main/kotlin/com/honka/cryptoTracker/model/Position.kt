@@ -1,5 +1,6 @@
 package com.honka.cryptoTracker.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.honka.cryptoTracker.dto.PositionDto
 import jakarta.persistence.*
 import java.math.BigDecimal

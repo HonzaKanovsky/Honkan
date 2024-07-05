@@ -16,6 +16,6 @@ class PortfolioController(val portfolioService: PortfolioService) {
 
     @GetMapping("/positions")
     fun getPositions(@RequestBody portfolioRequestDto : PortfolioRequestDto): PortfolioDto{
-        return portfolioService.getPositionsForUser(portfolioRequestDto)
+        return portfolioService.getPortfolioForUser(portfolioRequestDto)
     }
 }

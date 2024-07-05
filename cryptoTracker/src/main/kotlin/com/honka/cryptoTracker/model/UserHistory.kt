@@ -1,5 +1,7 @@
 package com.honka.cryptoTracker.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.honka.cryptoTracker.dto.UserHistoryDto
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.Instant
@@ -12,6 +14,7 @@ class UserHistory(
     @Column(name = "id", nullable = false)
     var id: Long? = null,
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null,
@@ -20,5 +23,10 @@ class UserHistory(
     var portfolioValue: BigDecimal = BigDecimal.ZERO,
 
     @Column(name = "date")
-    var date: Instant? = null
-)
+    var historizationDate: Instant? = null
+){
+
+    fun toDto(): UserHistoryDto {
+        return UserHistoryDto(id = this.id!!, portfolioValue=portfolioValue, historizationDate = historizationDate!!)
+    }
+}
